@@ -1,6 +1,6 @@
 # Ticketbooth.Scanner
 
-[![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Scanner%20App?branchName=master)](https://dev.azure.com/developmomentum/Ticketbooth/_build/latest?definitionId=9&branchName=master)
+[![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Scanner?branchName=master)](https://dev.azure.com/developmomentum/Ticketbooth/_build/latest?definitionId=16&branchName=master)
 
 ## Overview
 
@@ -12,6 +12,6 @@ The goal of Ticketbooth scanner is to eventually run on WASM and be fully config
 
 ## Resources
 
-* [Open issues](https://github.com/drmathias/Ticketbooth/issues)
-* [Contributing guide](https://github.com/drmathias/Ticketbooth/blob/master/CONTRIBUTING.md)
-* [Code of conduct](https://github.com/drmathias/Ticketbooth/blob/master/CODE_OF_CONDUCT.md)
+* [Open issues](https://github.com/ticketbooth-solutions/Ticketbooth.Scanner/issues)
+* [Contributing guide](https://github.com/ticketbooth-solutions/Ticketbooth.Scanner/blob/master/CONTRIBUTING.md)
+* [Code of conduct](https://github.com/ticketbooth-solutions/Ticketbooth.Scanner/blob/master/CODE_OF_CONDUCT.md)
