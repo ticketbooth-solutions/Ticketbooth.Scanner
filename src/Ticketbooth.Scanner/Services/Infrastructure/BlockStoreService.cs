@@ -1,7 +1,7 @@
 ﻿using Flurl;
 using Flurl.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Net;
 using System.Threading.Tasks;
@@ -11,18 +11,16 @@ namespace Ticketbooth.Scanner.Services.Infrastructure
 {
     public class BlockStoreService : IBlockStoreService
     {
-        private readonly IConfiguration _configuration;
+        private readonly string _apiUri;
         private readonly ILogger<BlockStoreService> _logger;
 
-        public BlockStoreService(IConfiguration configuration, ILogger<BlockStoreService> logger)
+        public BlockStoreService(IOptions<NodeOptions> nodeOptions, ILogger<BlockStoreService> logger)
         {
-            _configuration = configuration;
+            _apiUri = nodeOptions.Value.ApiUri;
             _logger = logger;
         }
 
-        private Url BaseRequest =>
-            new Url(_configuration["Stratis:FullNodeApi"])
-                .AppendPathSegments("api", "blockStore");
+        private Url BaseRequest => new Url(_apiUri).AppendPathSegments("api", "blockStore");
 
         public async Task<BlockDto> GetBlockDataAsync(string blockHash)
         {

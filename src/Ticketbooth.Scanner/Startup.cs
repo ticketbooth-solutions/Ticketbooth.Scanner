@@ -36,6 +36,8 @@ namespace Ticketbooth.Scanner
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<NodeOptions>(Configuration.GetSection("FullNode"));
+
             services.AddSingleton<INodeService, NodeService>();
             services.AddSingleton<IHealthChecker, HealthChecker>();
             services.AddHostedService<HealthMonitor>();

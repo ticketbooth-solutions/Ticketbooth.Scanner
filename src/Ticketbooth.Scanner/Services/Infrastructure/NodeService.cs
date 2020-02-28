@@ -1,7 +1,7 @@
 ﻿using Flurl;
 using Flurl.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Net;
 using System.Threading.Tasks;
@@ -11,25 +11,23 @@ namespace Ticketbooth.Scanner.Services.Infrastructure
 {
     public class NodeService : INodeService
     {
-        private readonly IConfiguration _configuration;
+        private readonly string _apiUri;
         private readonly ILogger<NodeService> _logger;
 
-        public NodeService(IConfiguration configuration, ILogger<NodeService> logger)
+        public NodeService(IOptions<NodeOptions> nodeOptions, ILogger<NodeService> logger)
         {
-            _configuration = configuration;
+            _apiUri = nodeOptions.Value.ApiUri;
             _logger = logger;
         }
 
-        private IFlurlRequest BaseRequest =>
-            new Url(_configuration["Stratis:FullNodeApi"])
-                .AppendPathSegments("api", "node")
-                .AllowHttpStatus(new HttpStatusCode[] { HttpStatusCode.OK });
+        private Url BaseRequest => new Url(_apiUri).AppendPathSegments("api", "node");
 
         public async Task<NodeStatus> CheckNodeStatus()
         {
             try
             {
                 var response = await BaseRequest
+                    .AllowHttpStatus(new HttpStatusCode[] { HttpStatusCode.OK })
                     .AppendPathSegment("status")
                     .GetAsync();
 

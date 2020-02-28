@@ -1,6 +1,6 @@
 ﻿using Flurl.Http.Testing;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -13,7 +13,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
 {
     public class BlockStoreServiceTests
     {
-        private Mock<IConfiguration> _configuration;
+        private Mock<IOptions<NodeOptions>> _nodeOptions;
         private Mock<ILogger<BlockStoreService>> _logger;
         private HttpTest _httpTest;
         private IBlockStoreService _blockStoreService;
@@ -21,9 +21,9 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
         [SetUp]
         public void SetUp()
         {
-            _configuration = new Mock<IConfiguration>();
+            _nodeOptions = new Mock<IOptions<NodeOptions>>();
             _logger = new Mock<ILogger<BlockStoreService>>();
-            _configuration.Setup(callTo => callTo["Stratis:FullNodeApi"]).Returns("http://190.178.5.293");
+            _nodeOptions.Setup(callTo => callTo.Value).Returns(new NodeOptions { ApiUri = "http://190.178.5.293" });
             _httpTest = new HttpTest();
         }
 
@@ -42,7 +42,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
                 ReturnValue = new BlockDto { Height = 1000 }
             };
             _httpTest.RespondWithJson(receipt, status: 200);
-            _blockStoreService = new BlockStoreService(_configuration.Object, _logger.Object);
+            _blockStoreService = new BlockStoreService(_nodeOptions.Object, _logger.Object);
 
             // Act
             var result = await _blockStoreService.GetBlockDataAsync("hx78s8dj3uuiwejfuew98f8wef8");
@@ -58,7 +58,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
         {
             // Arrange
             _httpTest.RespondWith(status: 400);
-            _blockStoreService = new BlockStoreService(_configuration.Object, _logger.Object);
+            _blockStoreService = new BlockStoreService(_nodeOptions.Object, _logger.Object);
 
             // Act
             var result = await _blockStoreService.GetBlockDataAsync("hx78s8dj3uuiwejfuew98f8wef8");
@@ -73,7 +73,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
         {
             // Arrange
             _httpTest.RespondWith(status: 500);
-            _blockStoreService = new BlockStoreService(_configuration.Object, _logger.Object);
+            _blockStoreService = new BlockStoreService(_nodeOptions.Object, _logger.Object);
 
             // Act
             var result = await _blockStoreService.GetBlockDataAsync("hx78s8dj3uuiwejfuew98f8wef8");

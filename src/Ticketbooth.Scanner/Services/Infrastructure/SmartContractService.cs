@@ -1,7 +1,7 @@
 ﻿using Flurl;
 using Flurl.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Net;
 using System.Threading.Tasks;
@@ -11,19 +11,18 @@ namespace Ticketbooth.Scanner.Services.Infrastructure
 {
     public class SmartContractService : ISmartContractService
     {
-
-        private readonly IConfiguration _configuration;
+        private readonly string _apiUri;
+        private readonly string _contractAddress;
         private readonly ILogger<SmartContractService> _logger;
 
-        public SmartContractService(IConfiguration configuration, ILogger<SmartContractService> logger)
+        public SmartContractService(IOptions<NodeOptions> nodeOptions, ILogger<SmartContractService> logger)
         {
-            _configuration = configuration;
+            _apiUri = nodeOptions.Value.ApiUri;
+            _contractAddress = nodeOptions.Value.ContractAddress;
             _logger = logger;
         }
 
-        private Url BaseRequest =>
-            new Url(_configuration["Stratis:FullNodeApi"])
-                .AppendPathSegments("api", "SmartContracts");
+        private Url BaseRequest => new Url(_apiUri).AppendPathSegments("api", "SmartContracts");
 
         public async Task<Receipt<TValue, object>> FetchReceiptAsync<TValue>(string transactionHash)
         {
@@ -62,7 +61,7 @@ namespace Ticketbooth.Scanner.Services.Infrastructure
                 var response = await BaseRequest
                     .AllowHttpStatus(new HttpStatusCode[] { HttpStatusCode.OK })
                     .AppendPathSegment("receipt-search")
-                    .SetQueryParam("contractAddress", _configuration["ContractAddress"])
+                    .SetQueryParam("contractAddress", _contractAddress)
                     .SetQueryParam("eventName", typeof(TLog).Name)
                     .GetAsync();
 

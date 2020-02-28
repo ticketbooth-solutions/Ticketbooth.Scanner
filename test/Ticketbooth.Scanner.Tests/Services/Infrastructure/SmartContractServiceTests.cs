@@ -1,6 +1,6 @@
 ﻿using Flurl.Http.Testing;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -15,7 +15,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
 {
     public class SmartContractServiceTests
     {
-        private Mock<IConfiguration> _configuration;
+        private Mock<IOptions<NodeOptions>> _nodeOptions;
         private Mock<ILogger<SmartContractService>> _logger;
         private HttpTest _httpTest;
         private ISmartContractService _smartContractService;
@@ -23,10 +23,10 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
         [SetUp]
         public void SetUp()
         {
-            _configuration = new Mock<IConfiguration>();
+            _nodeOptions = new Mock<IOptions<NodeOptions>>();
             _logger = new Mock<ILogger<SmartContractService>>();
-            _configuration.Setup(callTo => callTo["Stratis:FullNodeApi"]).Returns("http://190.178.5.293");
-            _configuration.Setup(callTo => callTo["ContractAddress"]).Returns("CGsBaREiqSF6VbmTSnGTKknE1RRbNpjXco");
+            _nodeOptions.Setup(callTo => callTo.Value)
+                .Returns(new NodeOptions { ApiUri = "http://190.178.5.293", ContractAddress = "CGsBaREiqSF6VbmTSnGTKknE1RRbNpjXco" });
             _httpTest = new HttpTest();
         }
 
@@ -45,7 +45,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
                 ReturnValue = 5
             };
             _httpTest.RespondWithJson(receipt, status: 200);
-            _smartContractService = new SmartContractService(_configuration.Object, _logger.Object);
+            _smartContractService = new SmartContractService(_nodeOptions.Object, _logger.Object);
 
             // Act
             var result = await _smartContractService.FetchReceiptAsync<int>("hx78s8dj3uuiwejfuew98f8wef8");
@@ -61,7 +61,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
         {
             // Arrange
             _httpTest.RespondWith(status: 400);
-            _smartContractService = new SmartContractService(_configuration.Object, _logger.Object);
+            _smartContractService = new SmartContractService(_nodeOptions.Object, _logger.Object);
 
             // Act
             var result = await _smartContractService.FetchReceiptAsync<int>("hx78s8dj3uuiwejfuew98f8wef8");
@@ -75,7 +75,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
         {
             // Arrange
             _httpTest.RespondWith(status: 500);
-            _smartContractService = new SmartContractService(_configuration.Object, _logger.Object);
+            _smartContractService = new SmartContractService(_nodeOptions.Object, _logger.Object);
 
             // Act
             var result = await _smartContractService.FetchReceiptAsync<int>("hx78s8dj3uuiwejfuew98f8wef8");
@@ -110,7 +110,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
                 }
             };
             _httpTest.RespondWithJson(receipts, status: 200);
-            _smartContractService = new SmartContractService(_configuration.Object, _logger.Object);
+            _smartContractService = new SmartContractService(_nodeOptions.Object, _logger.Object);
 
             // Act
             var result = await _smartContractService.FetchReceiptsAsync<Ticket>();
@@ -126,7 +126,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
         {
             // Arrange
             _httpTest.RespondWith(status: 400);
-            _smartContractService = new SmartContractService(_configuration.Object, _logger.Object);
+            _smartContractService = new SmartContractService(_nodeOptions.Object, _logger.Object);
 
             // Act
             var result = await _smartContractService.FetchReceiptsAsync<Ticket>();
@@ -141,7 +141,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
         {
             // Arrange
             _httpTest.RespondWith(status: 500);
-            _smartContractService = new SmartContractService(_configuration.Object, _logger.Object);
+            _smartContractService = new SmartContractService(_nodeOptions.Object, _logger.Object);
 
             // Act
             var result = await _smartContractService.FetchReceiptsAsync<Ticket>();

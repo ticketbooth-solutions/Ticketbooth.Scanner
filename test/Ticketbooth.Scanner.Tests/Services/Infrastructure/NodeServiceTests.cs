@@ -1,6 +1,6 @@
 ﻿using Flurl.Http.Testing;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -13,7 +13,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
 {
     public class NodeServiceTests
     {
-        private Mock<IConfiguration> _configuration;
+        private Mock<IOptions<NodeOptions>> _nodeOptions;
         private Mock<ILogger<NodeService>> _logger;
         private HttpTest _httpTest;
         private INodeService _nodeService;
@@ -21,11 +21,11 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
         [SetUp]
         public void SetUp()
         {
-            _configuration = new Mock<IConfiguration>();
+            _nodeOptions = new Mock<IOptions<NodeOptions>>();
             _logger = new Mock<ILogger<NodeService>>();
-            _configuration.Setup(callTo => callTo["Stratis:FullNodeApi"]).Returns("http://190.178.5.293");
+            _nodeOptions.Setup(callTo => callTo.Value).Returns(new NodeOptions { ApiUri = "http://190.178.5.293" });
             _httpTest = new HttpTest();
-            _nodeService = new NodeService(_configuration.Object, _logger.Object);
+            _nodeService = new NodeService(_nodeOptions.Object, _logger.Object);
         }
 
         [TearDown]
