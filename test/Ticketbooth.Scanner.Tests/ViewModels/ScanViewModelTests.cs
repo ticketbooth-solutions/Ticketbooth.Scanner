@@ -3,8 +3,8 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Ticketbooth.Scanner.Services.Application;
-using Ticketbooth.Scanner.Services.Infrastructure;
+using Ticketbooth.Scanner.Application.Services;
+using Ticketbooth.Scanner.Domain.Interfaces;
 using Ticketbooth.Scanner.Tests.Extensions;
 using Ticketbooth.Scanner.ViewModels;
 

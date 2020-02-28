@@ -1,8 +1,8 @@
 ﻿using Easy.MessageHub;
 using Moq;
 using NUnit.Framework;
-using Ticketbooth.Scanner.Data;
-using Ticketbooth.Scanner.Eventing.Events;
+using Ticketbooth.Scanner.Application.Eventing.Events;
+using Ticketbooth.Scanner.Domain.Data;
 using Ticketbooth.Scanner.ViewModels;
 
 namespace Ticketbooth.Scanner.Tests.ViewModels

@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Flurl.Http" Version="2.4.2" />
+    <PackageReference Include="Microsoft.JSInterop" Version="3.1.2" />
+    <PackageReference Include="Stratis.SmartContracts.CLR" Version="1.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ticketbooth.Scanner.Domain\Ticketbooth.Scanner.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -12,12 +12,15 @@ using Stratis.Sidechains.Networks;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR.Serialization;
 using System.Reflection;
-using Ticketbooth.Scanner.Converters;
-using Ticketbooth.Scanner.Data;
-using Ticketbooth.Scanner.Messaging;
-using Ticketbooth.Scanner.Services.Application;
-using Ticketbooth.Scanner.Services.Background;
-using Ticketbooth.Scanner.Services.Infrastructure;
+using Ticketbooth.Scanner.Application.Background;
+using Ticketbooth.Scanner.Application.Messaging;
+using Ticketbooth.Scanner.Application.Services;
+using Ticketbooth.Scanner.Domain.Data;
+using Ticketbooth.Scanner.Domain.Interfaces;
+using Ticketbooth.Scanner.Infrastructure;
+using Ticketbooth.Scanner.Infrastructure.Converters;
+using Ticketbooth.Scanner.Infrastructure.Data;
+using Ticketbooth.Scanner.Infrastructure.Services;
 using Ticketbooth.Scanner.ViewModels;
 
 namespace Ticketbooth.Scanner

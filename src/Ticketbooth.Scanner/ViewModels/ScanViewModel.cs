@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Components;
 using System;
 using System.Threading.Tasks;
-using Ticketbooth.Scanner.Eventing;
-using Ticketbooth.Scanner.Eventing.Args;
-using Ticketbooth.Scanner.Services.Application;
-using Ticketbooth.Scanner.Services.Infrastructure;
+using Ticketbooth.Scanner.Application.Eventing;
+using Ticketbooth.Scanner.Application.Eventing.Args;
+using Ticketbooth.Scanner.Application.Services;
+using Ticketbooth.Scanner.Domain.Interfaces;
 
 namespace Ticketbooth.Scanner.ViewModels
 {

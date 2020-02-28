@@ -1,6 +1,6 @@
 # Ticketbooth.Scanner
 
-[![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Scanner?branchName=master)](https://dev.azure.com/developmomentum/Ticketbooth/_build/latest?definitionId=16&branchName=master)
+![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Scanner?branchName=master)
 
 ## Overview
 
@@ -8,7 +8,7 @@ A web application allowing venues to scan tickets which have been sold using the
 
 ## Usage
 
-The goal of Ticketbooth scanner is to eventually run on WASM and be fully configurable in the app. For now, to use Ticketbooth scanner, simply clone the project and configure the app settings with your wallet and contract details, then you are ready to deploy it.
+The goal of Ticketbooth scanner is to eventually run on WASM and be fully configurable in the app. For now, to use Ticketbooth scanner, simply clone the project and configure the app settings with your node and smart contract details, then you are ready to deploy it.
 
 ## Resources
 

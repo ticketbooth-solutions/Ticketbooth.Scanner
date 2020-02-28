@@ -1,7 +1,7 @@
 ﻿using System;
-using Ticketbooth.Scanner.Eventing;
-using Ticketbooth.Scanner.Eventing.Args;
-using Ticketbooth.Scanner.Services.Application;
+using Ticketbooth.Scanner.Application.Eventing;
+using Ticketbooth.Scanner.Application.Eventing.Args;
+using Ticketbooth.Scanner.Application.Services;
 
 namespace Ticketbooth.Scanner.ViewModels
 {

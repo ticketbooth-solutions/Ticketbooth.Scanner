@@ -1,10 +1,10 @@
 ﻿using Easy.MessageHub;
 using System;
-using Ticketbooth.Scanner.Data;
-using Ticketbooth.Scanner.Data.Models;
-using Ticketbooth.Scanner.Eventing;
-using Ticketbooth.Scanner.Eventing.Args;
-using Ticketbooth.Scanner.Eventing.Events;
+using Ticketbooth.Scanner.Application.Eventing;
+using Ticketbooth.Scanner.Application.Eventing.Args;
+using Ticketbooth.Scanner.Application.Eventing.Events;
+using Ticketbooth.Scanner.Domain.Data;
+using Ticketbooth.Scanner.Domain.Data.Models;
 
 namespace Ticketbooth.Scanner.ViewModels
 {
