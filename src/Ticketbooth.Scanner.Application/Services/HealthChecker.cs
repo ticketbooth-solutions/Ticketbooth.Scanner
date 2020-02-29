@@ -1,13 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
+using Ticketbooth.Scanner.Application.Background;
 using Ticketbooth.Scanner.Application.Eventing.Args;
-using Ticketbooth.Scanner.Domain.Interfaces;
 
 namespace Ticketbooth.Scanner.Application.Services
 {
-    public class HealthChecker : IHealthChecker
+    public class HealthChecker : IHealthChecker, IDisposable
     {
         public const string HealthyNodeState = "Started";
         public const string HeathlyFeatureState = "Initialized";
@@ -18,18 +17,19 @@ namespace Ticketbooth.Scanner.Application.Services
             "Stratis.Bitcoin.Features.Api.ApiFeature"
         };
 
-        private readonly INodeService _nodeService;
+        private readonly IHealthMonitor _healthMonitor;
         private readonly ILogger<HealthChecker> _logger;
+
+        public event EventHandler<PropertyChangedEventArgs> OnPropertyChanged;
 
         private bool _isConnected;
         private bool _isValid;
 
-        public event EventHandler<PropertyChangedEventArgs> OnPropertyChanged;
-
-        public HealthChecker(INodeService nodeService, ILogger<HealthChecker> logger)
+        public HealthChecker(IHealthMonitor healthMonitor, ILogger<HealthChecker> logger)
         {
-            _nodeService = nodeService;
+            _healthMonitor = healthMonitor;
             _logger = logger;
+            _healthMonitor.OnNodeStatusUpdated += OnNodeStatusUpdated;
             _isValid = true;
         }
 
@@ -76,10 +76,9 @@ namespace Ticketbooth.Scanner.Application.Services
 
         public string State { get; private set; }
 
-        public async Task UpdateNodeHealthAsync()
+        private void OnNodeStatusUpdated(object sender, NodeDetailsEventArgs e)
         {
-            var nodeStatus = await _nodeService.CheckNodeStatus();
-            if (nodeStatus is null)
+            if (e.Status is null)
             {
                 IsConnected = false;
                 NodeAddress = null;
@@ -88,14 +87,19 @@ namespace Ticketbooth.Scanner.Application.Services
                 return;
             }
 
-            NodeAddress = nodeStatus.ExternalAddress;
-            NodeVersion = nodeStatus.Version;
-            State = nodeStatus.State;
+            NodeAddress = e.Status.ExternalAddress;
+            NodeVersion = e.Status.Version;
+            State = e.Status.State;
 
-            var requiredFeaturesAvailable = nodeStatus.FeaturesData.Where(feature => RequiredFeatures.Contains(feature.Namespace));
+            var requiredFeaturesAvailable = e.Status.FeaturesData.Where(feature => RequiredFeatures.Contains(feature.Namespace));
             IsValid = requiredFeaturesAvailable.Count() == RequiredFeatures.Length
                 && requiredFeaturesAvailable.All(feature => feature.State == HeathlyFeatureState);
-            IsConnected = nodeStatus.State == HealthyNodeState;
+            IsConnected = e.Status.State == HealthyNodeState;
+        }
+
+        public void Dispose()
+        {
+            _healthMonitor.OnNodeStatusUpdated -= OnNodeStatusUpdated;
         }
     }
 }

@@ -7,10 +7,10 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Ticketbooth.Scanner.Application.Converters;
 using Ticketbooth.Scanner.Application.Messaging.Requests;
 using Ticketbooth.Scanner.Application.Services;
 using Ticketbooth.Scanner.Domain.Data.Dtos;
-using Ticketbooth.Scanner.Infrastructure.Converters;
 using Ticketbooth.Scanner.Shared;
 using static TicketContract;
 

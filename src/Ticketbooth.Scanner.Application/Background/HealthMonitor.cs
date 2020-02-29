@@ -3,21 +3,24 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Ticketbooth.Scanner.Application.Services;
+using Ticketbooth.Scanner.Application.Eventing.Args;
+using Ticketbooth.Scanner.Domain.Interfaces;
 
 namespace Ticketbooth.Scanner.Application.Background
 {
-    public class HealthMonitor : IHostedService, IDisposable
+    public class HealthMonitor : IHealthMonitor, IHostedService, IDisposable
     {
-        private readonly IHealthChecker _healthChecker;
         private readonly ILogger<HealthMonitor> _logger;
+        private readonly INodeService _nodeService;
+
+        public event EventHandler<NodeDetailsEventArgs> OnNodeStatusUpdated;
 
         private Timer _timer;
 
-        public HealthMonitor(IHealthChecker healthChecker, ILogger<HealthMonitor> logger)
+        public HealthMonitor(ILogger<HealthMonitor> logger, INodeService nodeService)
         {
-            _healthChecker = healthChecker;
             _logger = logger;
+            _nodeService = nodeService;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -31,7 +34,8 @@ namespace Ticketbooth.Scanner.Application.Background
 
         private async void PollNodeHealthAsync(object state)
         {
-            await _healthChecker.UpdateNodeHealthAsync();
+            var nodeStatus = await _nodeService.CheckNodeStatus();
+            OnNodeStatusUpdated?.Invoke(this, new NodeDetailsEventArgs(nodeStatus));
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

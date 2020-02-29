@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using Ticketbooth.Scanner.Application.Eventing;
+﻿using Ticketbooth.Scanner.Application.Eventing;
 
 namespace Ticketbooth.Scanner.Application.Services
 {
@@ -16,7 +15,5 @@ namespace Ticketbooth.Scanner.Application.Services
         string NodeVersion { get; }
 
         string State { get; }
-
-        Task UpdateNodeHealthAsync();
     }
 }

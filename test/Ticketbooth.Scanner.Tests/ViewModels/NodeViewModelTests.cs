@@ -15,7 +15,7 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
         public void SetUp()
         {
             _healthChecker = new Mock<IHealthChecker>();
-            _nodeViewModel = new NodeViewModel(_healthChecker.Object);
+            _nodeViewModel = new NodeViewModel(_healthChecker.Object, Mock.Of<INetworkResolver>());
         }
 
         [Test]

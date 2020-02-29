@@ -1,18 +1,18 @@
-﻿using NBitcoin;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR;
 using System;
+using Ticketbooth.Scanner.Application.Services;
 
-namespace Ticketbooth.Scanner.Infrastructure.Converters
+namespace Ticketbooth.Scanner.Application.Converters
 {
     public class AddressConverter : JsonConverter
     {
-        private readonly Network _network;
+        private readonly INetworkResolver _networkResolver;
 
-        public AddressConverter(Network network)
+        public AddressConverter(INetworkResolver networkResolver)
         {
-            _network = network;
+            _networkResolver = networkResolver;
         }
 
         public override bool CanConvert(Type objectType)
@@ -22,12 +22,12 @@ namespace Ticketbooth.Scanner.Infrastructure.Converters
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            return ((string)reader.Value).ToAddress(_network);
+            return ((string)reader.Value).ToAddress(_networkResolver.Current);
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            writer.WriteValue(((Address)value).ToUint160().ToBase58Address(_network));
+            writer.WriteValue(((Address)value).ToUint160().ToBase58Address(_networkResolver.Current));
         }
     }
 }

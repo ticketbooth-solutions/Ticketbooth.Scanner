@@ -6,11 +6,7 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
 using SmartContract.Essentials.Ciphering;
-using Stratis.Sidechains.Networks;
-using Stratis.SmartContracts;
-using Stratis.SmartContracts.CLR.Serialization;
 using System.Reflection;
 using Ticketbooth.Scanner.Application.Background;
 using Ticketbooth.Scanner.Application.Messaging;
@@ -18,7 +14,6 @@ using Ticketbooth.Scanner.Application.Services;
 using Ticketbooth.Scanner.Domain.Data;
 using Ticketbooth.Scanner.Domain.Interfaces;
 using Ticketbooth.Scanner.Infrastructure;
-using Ticketbooth.Scanner.Infrastructure.Converters;
 using Ticketbooth.Scanner.Infrastructure.Data;
 using Ticketbooth.Scanner.Infrastructure.Services;
 using Ticketbooth.Scanner.ViewModels;
@@ -41,34 +36,34 @@ namespace Ticketbooth.Scanner
         {
             services.Configure<NodeOptions>(Configuration.GetSection("FullNode"));
 
-            services.AddSingleton<INodeService, NodeService>();
-            services.AddSingleton<IHealthChecker, HealthChecker>();
-            services.AddHostedService<HealthMonitor>();
-
-            var network = CirrusNetwork.NetworksSelector.Mainnet();
-            services.AddSingleton(network);
-            services.AddSingleton<IContractPrimitiveSerializer, ContractPrimitiveSerializer>();
-            services.AddSingleton<ISerializer, Serializer>();
-            services.AddSingleton<ITicketRepository, TicketRepository>();
+            // infrastructure
             services.AddSingleton<IBlockStoreService, BlockStoreService>();
+            services.AddSingleton<INodeService, NodeService>();
             services.AddSingleton<ISmartContractService, SmartContractService>();
+            services.AddSingleton<ITicketRepository, TicketRepository>();
+            services.AddTransient<IQrCodeScanner, QrCodeScanner>();
+
+            // node
+            services.AddSingleton<IHealthMonitor, HealthMonitor>();
+            services.AddHostedService(services => (HealthMonitor)services.GetRequiredService<IHealthMonitor>());
+            services.AddSingleton<IHealthChecker, HealthChecker>();
+            services.AddSingleton<INetworkResolver, NetworkResolver>();
+
+            // application
             services.AddSingleton<ITicketChecker, TicketChecker>();
             services.AddSingleton<IMessageHub, MessageHub>();
             services.AddSingleton<ICipherFactory, AesCipherFactory>();
             services.AddMediatR(config => config.Using<ParallelMediator>().AsSingleton(), Assembly.GetExecutingAssembly());
-            services.AddTransient<IQrCodeScanner, QrCodeScanner>();
             services.AddTransient<IQrCodeValidator, QrCodeValidator>();
+
+            // presentation
             services.AddTransient<NodeViewModel>();
             services.AddTransient<DetailsViewModel>();
             services.AddTransient<ScanViewModel>();
             services.AddTransient<IndexViewModel>();
 
-            services.AddRazorPages().AddNewtonsoftJson(options =>
-            {
-                options.SerializerSettings.Converters.Add(new AddressConverter(network));
-                options.SerializerSettings.Converters.Add(new ByteArrayToHexConverter());
-                JsonConvert.DefaultSettings = () => options.SerializerSettings;
-            });
+            services.ConfigureOptions<JsonOptionsConfiguration>();
+            services.AddRazorPages().AddNewtonsoftJson();
 
             // blazor server configures static file middleware, so have to do this in container config
             var fileExtensionProvider = new FileExtensionContentTypeProvider();

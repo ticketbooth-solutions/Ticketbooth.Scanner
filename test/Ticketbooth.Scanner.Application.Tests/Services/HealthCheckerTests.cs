@@ -2,9 +2,10 @@
 using Moq;
 using NUnit.Framework;
 using System.Threading.Tasks;
+using Ticketbooth.Scanner.Application.Background;
+using Ticketbooth.Scanner.Application.Eventing.Args;
 using Ticketbooth.Scanner.Application.Services;
 using Ticketbooth.Scanner.Domain.Data.Dtos;
-using Ticketbooth.Scanner.Domain.Interfaces;
 using Ticketbooth.Scanner.Shared;
 
 namespace Ticketbooth.Scanner.Application.Tests.Services
@@ -38,16 +39,16 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
             new NodeFeature { Namespace = "Stratis.Bitcoin.Features.Api.ApiFeature", State = ValidFeatureState },
         };
 
-        private Mock<INodeService> _nodeService;
+        private Mock<IHealthMonitor> _healthMonitor;
         private Mock<ILogger<HealthChecker>> _logger;
         private IHealthChecker _healthChecker;
 
         [SetUp]
         public void SetUp()
         {
-            _nodeService = new Mock<INodeService>();
+            _healthMonitor = new Mock<IHealthMonitor>();
             _logger = new Mock<ILogger<HealthChecker>>();
-            _healthChecker = new HealthChecker(_nodeService.Object, _logger.Object);
+            _healthChecker = new HealthChecker(_healthMonitor.Object, _logger.Object);
         }
 
         [Test]
@@ -63,7 +64,7 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_NodeStatusResponse_NodeVersionIsSet()
+        public async Task OnNodeStatusUpdated_NodeVersion_IsSetCorrectly()
         {
             // Arrange
             var nodeVersion = "3.0.5.0";
@@ -73,17 +74,16 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 FeaturesData = SomeRequiredFeaturesReady,
                 Version = nodeVersion
             };
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
 
             // Act
-            await _healthChecker.UpdateNodeHealthAsync();
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(nodeStatus));
 
             // Assert
             Assert.That(_healthChecker.NodeVersion, Is.EqualTo(nodeVersion));
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_AllRequiredFeaturesInitialized_IsValidTrue()
+        public async Task OnNodeStatusUpdated_AllRequiredFeaturesInitialized_IsValidTrue()
         {
             // Arrange
             var nodeStatus = new NodeStatus
@@ -91,17 +91,16 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 State = "Starting",
                 FeaturesData = AllRequiredFeaturesReady
             };
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
 
             // Act
-            await _healthChecker.UpdateNodeHealthAsync();
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(nodeStatus));
 
             // Assert
             Assert.That(_healthChecker.IsValid, Is.True);
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_SomeRequiredFeaturesInitialized_IsValidFalse()
+        public async Task OnNodeStatusUpdated_SomeRequiredFeaturesInitialized_IsValidFalse()
         {
             // Arrange
             var nodeStatus = new NodeStatus
@@ -109,17 +108,16 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 State = "Starting",
                 FeaturesData = SomeRequiredFeaturesReady
             };
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
 
             // Act
-            await _healthChecker.UpdateNodeHealthAsync();
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(nodeStatus));
 
             // Assert
             Assert.That(_healthChecker.IsValid, Is.False);
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_AllRequiredFeaturesNotInitialized_IsValidFalse()
+        public async Task OnNodeStatusUpdated_AllRequiredFeaturesNotInitialized_IsValidFalse()
         {
             // Arrange
             var nodeStatus = new NodeStatus
@@ -127,17 +125,16 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 State = "Starting",
                 FeaturesData = AllRequiredFeaturesNotReady
             };
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
 
             // Act
-            await _healthChecker.UpdateNodeHealthAsync();
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(nodeStatus));
 
             // Assert
             Assert.That(_healthChecker.IsValid, Is.False);
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_IsValidFalse_LogsWarning()
+        public async Task OnNodeStatusUpdated_IsValidFalse_LogsWarning()
         {
             // Arrange
             var nodeStatus = new NodeStatus
@@ -145,17 +142,16 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 State = "Started",
                 FeaturesData = SomeRequiredFeaturesReady
             };
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
 
             // Act
-            await _healthChecker.UpdateNodeHealthAsync();
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(nodeStatus));
 
             // Assert
             _logger.VerifyLog(LogLevel.Warning);
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_NodeStatusStateStarted_IsConnectedTrue()
+        public async Task OnNodeStatusUpdated_NodeStatusStateStarted_IsConnectedTrue()
         {
             // Arrange
             var nodeStatus = new NodeStatus
@@ -163,17 +159,16 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 State = "Started",
                 FeaturesData = SomeRequiredFeaturesReady
             };
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
 
             // Act
-            await _healthChecker.UpdateNodeHealthAsync();
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(nodeStatus));
 
             // Assert
             Assert.That(_healthChecker.IsConnected, Is.True);
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_NodeStatusStateStarting_IsConnectedFalse()
+        public async Task OnNodeStatusUpdated_NodeStatusStateStarting_IsConnectedFalse()
         {
             // Arrange
             var nodeStatus = new NodeStatus
@@ -181,17 +176,16 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 State = "Starting",
                 FeaturesData = SomeRequiredFeaturesReady
             };
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
 
             // Act
-            await _healthChecker.UpdateNodeHealthAsync();
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(nodeStatus));
 
             // Assert
             Assert.That(_healthChecker.IsConnected, Is.False);
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_IsValidTrueIsConnectedFalse_IsAvailableFalse()
+        public async Task OnNodeStatusUpdated_IsValidTrueIsConnectedFalse_IsAvailableFalse()
         {
             // Arrange
             var nodeStatus = new NodeStatus
@@ -199,17 +193,16 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 State = "Starting",
                 FeaturesData = AllRequiredFeaturesReady
             };
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
 
             // Act
-            await _healthChecker.UpdateNodeHealthAsync();
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(nodeStatus));
 
             // Assert
             Assert.That(_healthChecker.IsAvailable, Is.False);
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_IsValidFalseIsConnectedTrue_IsAvailableFalse()
+        public async Task OnNodeStatusUpdated_IsValidFalseIsConnectedTrue_IsAvailableFalse()
         {
             // Arrange
             var nodeStatus = new NodeStatus
@@ -217,17 +210,16 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 State = "Started",
                 FeaturesData = SomeRequiredFeaturesReady
             };
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
 
             // Act
-            await _healthChecker.UpdateNodeHealthAsync();
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(nodeStatus));
 
             // Assert
             Assert.That(_healthChecker.IsAvailable, Is.False);
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_IsValidTrueIsConnectedTrue_IsAvailableTrue()
+        public async Task OnNodeStatusUpdated_IsValidTrueIsConnectedTrue_IsAvailableTrue()
         {
             // Arrange
             var nodeStatus = new NodeStatus
@@ -235,17 +227,16 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 State = "Started",
                 FeaturesData = AllRequiredFeaturesReady
             };
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
 
             // Act
-            await _healthChecker.UpdateNodeHealthAsync();
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(nodeStatus));
 
             // Assert
             Assert.That(_healthChecker.IsAvailable, Is.True);
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_IsAvailableFalseToTrue_OnPropertyChangedInvoked()
+        public async Task OnNodeStatusUpdated_IsAvailableFalseToTrue_OnPropertyChangedInvoked()
         {
             var eventInvoked = false;
             var nodeStatus = new NodeStatus
@@ -253,12 +244,11 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 State = "Started",
                 FeaturesData = AllRequiredFeaturesReady
             };
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
 
             _healthChecker.OnPropertyChanged += (s, e) => eventInvoked = true;
 
             // Act
-            await _healthChecker.UpdateNodeHealthAsync();
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(nodeStatus));
 
             // Assert
             Assert.That(eventInvoked, Is.True);
@@ -267,7 +257,7 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_IsAvailableTrueToTrue_OnPropertyChangedNotInvoked()
+        public async Task OnNodeStatusUpdated_IsAvailableTrueToTrue_OnPropertyChangedNotInvoked()
         {
             var eventInvoked = false;
             var nodeStatus = new NodeStatus
@@ -275,13 +265,13 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 State = "Started",
                 FeaturesData = AllRequiredFeaturesReady
             };
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
-            await _healthChecker.UpdateNodeHealthAsync();
+
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(nodeStatus));
 
             _healthChecker.OnPropertyChanged += (s, e) => eventInvoked = true;
 
             // Act
-            await _healthChecker.UpdateNodeHealthAsync();
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(nodeStatus));
 
             // Assert
             Assert.That(eventInvoked, Is.False);
@@ -290,7 +280,7 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_NodeStatusNull_IsConnectedFalseIsAvailableFalseNodeVersionNull()
+        public async Task OnNodeStatusUpdated_NodeStatusNull_IsConnectedFalseIsAvailableFalseNodeVersionNull()
         {
             // Arrange
             var nodeStatus = new NodeStatus
@@ -299,13 +289,11 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 FeaturesData = AllRequiredFeaturesReady,
                 Version = "3.0.5.0"
             };
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
-            await _healthChecker.UpdateNodeHealthAsync();
 
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(null as NodeStatus));
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(nodeStatus));
 
             // Act
-            await _healthChecker.UpdateNodeHealthAsync();
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(null));
 
             // Assert
             Assert.Multiple(() =>
@@ -317,16 +305,14 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_IsAvailableFalseToFalse_OnPropertyChangedNotInvoked()
+        public async Task OnNodeStatusUpdated_IsAvailableFalseToFalse_OnPropertyChangedNotInvoked()
         {
             var eventInvoked = false;
-
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(null as NodeStatus));
 
             _healthChecker.OnPropertyChanged += (s, e) => eventInvoked = true;
 
             // Act
-            await _healthChecker.UpdateNodeHealthAsync();
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(null));
 
             // Assert
             Assert.That(eventInvoked, Is.False);
@@ -335,7 +321,7 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_IsAvailableTrueToFalse_OnPropertyChangedInvoked()
+        public async Task OnNodeStatusUpdated_IsAvailableTrueToFalse_OnPropertyChangedInvoked()
         {
             var eventInvoked = false;
             var nodeStatus = new NodeStatus
@@ -343,15 +329,13 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 State = "Started",
                 FeaturesData = AllRequiredFeaturesReady
             };
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
-            await _healthChecker.UpdateNodeHealthAsync();
 
-            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(null as NodeStatus));
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(nodeStatus));
 
             _healthChecker.OnPropertyChanged += (s, e) => eventInvoked = true;
 
             // Act
-            await _healthChecker.UpdateNodeHealthAsync();
+            _healthMonitor.Raise(healthMonitor => healthMonitor.OnNodeStatusUpdated += null, new NodeDetailsEventArgs(null));
 
             // Assert
             Assert.That(eventInvoked, Is.True);

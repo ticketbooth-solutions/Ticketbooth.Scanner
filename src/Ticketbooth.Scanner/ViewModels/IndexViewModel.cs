@@ -16,16 +16,16 @@ namespace Ticketbooth.Scanner.ViewModels
 
         private readonly IMessageHub _eventAggregator;
         private readonly ITicketRepository _ticketRepository;
-        private readonly Guid ticketScanAddedSubscription;
-        private readonly Guid ticketScanUpdatedSubscription;
+        private readonly Guid _ticketScanAddedSubscription;
+        private readonly Guid _ticketScanUpdatedSubscription;
 
         public IndexViewModel(IMessageHub eventAggregator, ITicketRepository ticketRepository)
         {
             _eventAggregator = eventAggregator;
             _ticketRepository = ticketRepository;
-            ticketScanAddedSubscription = _eventAggregator.Subscribe<TicketScanAdded>(
+            _ticketScanAddedSubscription = _eventAggregator.Subscribe<TicketScanAdded>(
                 message => OnPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TicketScans))));
-            ticketScanUpdatedSubscription = _eventAggregator.Subscribe<TicketScanUpdated>(
+            _ticketScanUpdatedSubscription = _eventAggregator.Subscribe<TicketScanUpdated>(
                 message => OnPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TicketScans))));
         }
 
@@ -35,8 +35,8 @@ namespace Ticketbooth.Scanner.ViewModels
 
         public void Dispose()
         {
-            _eventAggregator.Unsubscribe(ticketScanAddedSubscription);
-            _eventAggregator.Unsubscribe(ticketScanUpdatedSubscription);
+            _eventAggregator.Unsubscribe(_ticketScanAddedSubscription);
+            _eventAggregator.Unsubscribe(_ticketScanUpdatedSubscription);
         }
     }
 }

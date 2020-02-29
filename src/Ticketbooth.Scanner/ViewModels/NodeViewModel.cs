@@ -10,10 +10,12 @@ namespace Ticketbooth.Scanner.ViewModels
         public event EventHandler<PropertyChangedEventArgs> OnPropertyChanged;
 
         private readonly IHealthChecker _healthChecker;
+        private readonly INetworkResolver _networkResolver;
 
-        public NodeViewModel(IHealthChecker healthChecker)
+        public NodeViewModel(IHealthChecker healthChecker, INetworkResolver networkResolver)
         {
             _healthChecker = healthChecker;
+            _networkResolver = networkResolver;
             _healthChecker.OnPropertyChanged += (s, e) => OnPropertyChanged?.Invoke(s, e);
         }
 
@@ -23,7 +25,7 @@ namespace Ticketbooth.Scanner.ViewModels
 
         public string Version => $"v{_healthChecker.NodeVersion}";
 
-        public string Network => "Cirrus Main";
+        public string Network => _networkResolver.Current.Name;
 
         public string State => _healthChecker.State;
 

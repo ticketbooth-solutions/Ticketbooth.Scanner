@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 
-namespace Ticketbooth.Scanner.Infrastructure.Converters
+namespace Ticketbooth.Scanner.Application.Converters
 {
     public class ByteArrayToHexConverter : JsonConverter
     {
