@@ -57,10 +57,11 @@ namespace Ticketbooth.Scanner
             services.AddTransient<IQrCodeValidator, QrCodeValidator>();
 
             // presentation
-            services.AddTransient<NodeViewModel>();
             services.AddTransient<DetailsViewModel>();
-            services.AddTransient<ScanViewModel>();
             services.AddTransient<IndexViewModel>();
+            services.AddTransient<NodeViewModel>();
+            services.AddTransient<ScanViewModel>();
+            services.AddTransient<SettingsViewModel>();
 
             services.ConfigureOptions<JsonOptionsConfiguration>();
             services.AddRazorPages().AddNewtonsoftJson();

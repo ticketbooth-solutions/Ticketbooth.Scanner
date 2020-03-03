@@ -103,6 +103,7 @@ a {
 
 .button {
     padding: .5em 2em;
+    border: none;
     border-radius: 1em;
     background: #5596e5;
     color: #fff;
@@ -110,10 +111,17 @@ a {
     align-items: center;
     user-select: none;
     text-decoration: none;
+    cursor: pointer;
+    font-size: 1rem;
 }
 
 .button svg {
     margin-right: .5em;
+}
+
+.button[disabled] {
+    cursor: default;
+    background: #f2f2f2;
 }
 
 .container svg {
@@ -161,17 +169,55 @@ a {
     display: grid;
     align-items: center;
     grid-column-gap: .5em;
-    grid-template-columns: auto auto 1fr auto;
+    grid-template-columns: auto auto auto 1fr auto;
     color: #fff;
     border-bottom: 2px dashed #fff;
 }
 
-.node-status > *:nth-child(3) {
+.node-status > *:nth-child(4) {
     justify-self: right;
+}
+
+.node-status > a > svg {
+    vertical-align: bottom;
 }
 
 .content {
     flex: 1;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+form > * {
+    margin: .5em 0;
+}
+
+form label {
+    margin-bottom: .25em;
+}
+
+form > button {
+    align-self: flex-end;
+}
+
+input {
+    padding: .5em;
+    border-radius: 3px;
+    border: 1px dashed #d3d3d3;
+    box-shadow: 0 0 10px 1px rgba(40, 10, 150, 0.01);
+    font-family: 'Open Sans';
+    font-size: 12px;
+    min-width: 38ch;
+}
+
+.form-group {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
 }
 
 @keyframes rotation {

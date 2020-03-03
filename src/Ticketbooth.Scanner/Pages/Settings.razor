@@ -1,0 +1,23 @@
+﻿@page "/settings"
+
+@inject SettingsViewModel _settingsViewModel;
+
+<div class="container">
+    <EditForm Model="_settingsViewModel.NodeOptions" OnValidSubmit="_settingsViewModel.Save">
+        <FluentValidationValidator />
+
+        <div class="form-group">
+            <label for="node-uri">
+                <span>Node Address</span>
+            </label>
+            <InputText id="node-uri" @bind-Value="_settingsViewModel.NodeOptions.ApiUri"></InputText>
+        </div>
+        <div class="form-group">
+            <label for="contract-address">
+                <span>Contract Address</span>
+            </label>
+            <InputText id="contract-address" @bind-Value="_settingsViewModel.NodeOptions.ContractAddress" @oninput="StateHasChanged"></InputText>
+        </div>
+        <button class="button" type="submit">Save</button>
+    </EditForm>
+</div>
