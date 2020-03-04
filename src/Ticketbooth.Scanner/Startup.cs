@@ -10,6 +10,7 @@ using SmartContract.Essentials.Ciphering;
 using System.Reflection;
 using Ticketbooth.Scanner.Application.Background;
 using Ticketbooth.Scanner.Application.Messaging;
+using Ticketbooth.Scanner.Application.Messaging.Requests;
 using Ticketbooth.Scanner.Application.Services;
 using Ticketbooth.Scanner.Domain.Data;
 using Ticketbooth.Scanner.Domain.Interfaces;
@@ -53,7 +54,7 @@ namespace Ticketbooth.Scanner
             services.AddSingleton<ITicketChecker, TicketChecker>();
             services.AddSingleton<IMessageHub, MessageHub>();
             services.AddSingleton<ICipherFactory, AesCipherFactory>();
-            services.AddMediatR(config => config.Using<ParallelMediator>().AsSingleton(), Assembly.GetExecutingAssembly());
+            services.AddMediatR(config => config.Using<ParallelMediator>().AsSingleton(), Assembly.GetAssembly(typeof(TicketScanRequest)));
             services.AddTransient<IQrCodeValidator, QrCodeValidator>();
 
             // presentation

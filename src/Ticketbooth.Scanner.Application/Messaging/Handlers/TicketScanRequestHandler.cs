@@ -113,16 +113,19 @@ namespace Ticketbooth.Scanner.Application.Messaging.Handlers
         private async Task<ulong> GetTicketSaleStartBlockHeightAsync()
         {
             var showReceipts = await _smartContractService.FetchReceiptsAsync<Show>();
-            var retrieveBlockNumbers = showReceipts.Select(async receipt =>
+            if (showReceipts is null)
             {
-                var block = await _blockStoreService.GetBlockDataAsync(receipt.BlockHash);
-                return new { Block = block };
-            });
-            var blockHeights = await Task.WhenAll(retrieveBlockNumbers);
-            return blockHeights
-                .Select(receipt => receipt.Block.Height)
-                .OrderBy(blockHeight => blockHeight)
-                .LastOrDefault();
+                return default;
+            }
+
+            var showReceipt = showReceipts.LastOrDefault();
+            if (showReceipt is null)
+            {
+                return default;
+            }
+
+            var block = await _blockStoreService.GetBlockDataAsync(showReceipt.BlockHash);
+            return block?.Height ?? default;
         }
     }
 }
