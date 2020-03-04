@@ -30,9 +30,12 @@ namespace Ticketbooth.Scanner.Application.Services
                 return;
             }
 
+            // strict ticket requirements
+            var ticketDeserializationSettings = new JsonSerializerSettings { MissingMemberHandling = MissingMemberHandling.Error };
+
             try
             {
-                var tickets = JsonConvert.DeserializeObject<DigitalTicket[]>(qrCodeData);
+                var tickets = JsonConvert.DeserializeObject<DigitalTicket[]>(qrCodeData, ticketDeserializationSettings);
                 if (tickets is null || !tickets.Any())
                 {
                     _logger.LogDebug("No tickets specified");
@@ -40,15 +43,17 @@ namespace Ticketbooth.Scanner.Application.Services
                 }
 
                 OnValidQrCode?.Invoke(this, null);
-                _logger.LogInformation("Begun processing ticket check transacions");
+                _logger.LogInformation("Begun processing ticket check transactions");
                 await _mediator.Send(new TicketScanRequest(tickets));
-            }
-            catch (JsonException e)
-            {
-                _logger.LogWarning(e.Message);
             }
             catch (FormatException e)
             {
+                // error deserializing byte array parameters
+                _logger.LogWarning(e.Message);
+            }
+            catch (JsonException e)
+            {
+                // not valid ticket json
                 _logger.LogWarning(e.Message);
             }
         }
