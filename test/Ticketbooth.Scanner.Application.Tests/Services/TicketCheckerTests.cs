@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using SHA3.Net;
 using SmartContract.Essentials.Ciphering;
+using SmartContract.Essentials.Hashing;
 using System;
 using System.Security.Cryptography;
 using Ticketbooth.Scanner.Application.Messaging.Data;
@@ -69,10 +71,9 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
         }
 
         [Test]
-        public void CheckTicket_DecryptSecretThrowsCryptographicException_ReturnsResultDoesNotOwnTicket()
+        public void CheckTicket_DecryptNullSecret_LogsWarning()
         {
             // Arrange
-            var secret = new byte[16] { 203, 92, 1, 93, 84, 38, 27, 94, 190, 10, 199, 232, 28, 2, 34, 83 };
             var scannedTicket = new DigitalTicket
             {
                 Seat = new Seat { Number = 1, Letter = 'A' }
@@ -81,48 +82,20 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
             var actualTicket = new Ticket
             {
                 Seat = new Seat { Number = 1, Letter = 'A' },
-                Secret = secret
+                Secret = null
             };
-
-            _cbc.Setup(callTo => callTo.Decrypt(secret, It.IsAny<byte[]>(), It.IsAny<byte[]>())).Throws<CryptographicException>();
 
             // Act
-            var result = _ticketChecker.CheckTicket(scannedTicket, actualTicket);
-
-            // Assert
-            Assert.That(result.OwnsTicket, Is.False);
-        }
-
-        [Test]
-        public void CheckTicket_DecryptSecretThrowsArgumentException_LogsWarning()
-        {
-            // Arrange
-            var secret = new byte[16] { 203, 92, 1, 93, 84, 38, 27, 94, 190, 10, 199, 232, 28, 2, 34, 83 };
-            var scannedTicket = new DigitalTicket
-            {
-                Seat = new Seat { Number = 1, Letter = 'A' }
-            };
-
-            var actualTicket = new Ticket
-            {
-                Seat = new Seat { Number = 1, Letter = 'A' },
-                Secret = secret
-            };
-
-            _cbc.Setup(callTo => callTo.Decrypt(secret, It.IsAny<byte[]>(), It.IsAny<byte[]>())).Throws<ArgumentException>();
-
-            // Act
-            var result = _ticketChecker.CheckTicket(scannedTicket, actualTicket);
+            _ticketChecker.CheckTicket(scannedTicket, actualTicket);
 
             // Assert
             _logger.VerifyLog(LogLevel.Warning);
         }
 
         [Test]
-        public void CheckTicket_DecryptSecretThrowsArgumentException_ReturnsNull()
+        public void CheckTicket_DecryptNullSecret_ReturnsNull()
         {
             // Arrange
-            var secret = new byte[16] { 203, 92, 1, 93, 84, 38, 27, 94, 190, 10, 199, 232, 28, 2, 34, 83 };
             var scannedTicket = new DigitalTicket
             {
                 Seat = new Seat { Number = 1, Letter = 'A' }
@@ -131,10 +104,8 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
             var actualTicket = new Ticket
             {
                 Seat = new Seat { Number = 1, Letter = 'A' },
-                Secret = secret
+                Secret = null
             };
-
-            _cbc.Setup(callTo => callTo.Decrypt(secret, It.IsAny<byte[]>(), It.IsAny<byte[]>())).Throws<ArgumentException>();
 
             // Act
             var result = _ticketChecker.CheckTicket(scannedTicket, actualTicket);
@@ -144,32 +115,7 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
         }
 
         [Test]
-        public void CheckTicket_DecryptSecretIsNull_ReturnsResultDoesNotOwnTicket()
-        {
-            // Arrange
-            var secret = new byte[16] { 203, 92, 1, 93, 84, 38, 27, 94, 190, 10, 199, 232, 28, 2, 34, 83 };
-            var scannedTicket = new DigitalTicket
-            {
-                Seat = new Seat { Number = 1, Letter = 'A' }
-            };
-
-            var actualTicket = new Ticket
-            {
-                Seat = new Seat { Number = 1, Letter = 'A' },
-                Secret = secret
-            };
-
-            _cbc.Setup(callTo => callTo.Decrypt(secret, It.IsAny<byte[]>(), It.IsAny<byte[]>())).Returns(null as string);
-
-            // Act
-            var result = _ticketChecker.CheckTicket(scannedTicket, actualTicket);
-
-            // Assert
-            Assert.That(result.OwnsTicket, Is.False);
-        }
-
-        [Test]
-        public void CheckTicket_ProvidedSecretDoesNotMatchDecryptedSecret_ReturnsResultDoesNotOwnTicket()
+        public void CheckTicket_ProvidedSecretHashDoesNotMatchActualHash_ReturnsResultDoesNotOwnTicket()
         {
             // Arrange
             var secret = new byte[16] { 203, 92, 1, 93, 84, 38, 27, 94, 190, 10, 199, 232, 28, 2, 34, 83 };
@@ -185,8 +131,6 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 Secret = secret
             };
 
-            _cbc.Setup(callTo => callTo.Decrypt(secret, It.IsAny<byte[]>(), It.IsAny<byte[]>())).Returns("jwo3NM7Ux0p1kJ_");
-
             // Act
             var result = _ticketChecker.CheckTicket(scannedTicket, actualTicket);
 
@@ -198,8 +142,13 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
         public void CheckTicket_ProvidedSecretMatchesCustomerIdentifierNull_ReturnsResultOwnsTicketNameEmpty()
         {
             // Arrange
-            var secret = new byte[16] { 203, 92, 1, 93, 84, 38, 27, 94, 190, 10, 199, 232, 28, 2, 34, 83 };
             var plainTextSecret = "f09aIm3-hH9379c";
+            byte[] hashedSecret;
+            using (var hasher = Sha3.Sha3224())
+            {
+                hashedSecret = hasher.ComputeHash(plainTextSecret);
+            }
+
             var scannedTicket = new DigitalTicket
             {
                 Seat = new Seat { Number = 1, Letter = 'A' },
@@ -209,10 +158,8 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
             var actualTicket = new Ticket
             {
                 Seat = new Seat { Number = 1, Letter = 'A' },
-                Secret = secret
+                Secret = hashedSecret
             };
-
-            _cbc.Setup(callTo => callTo.Decrypt(secret, It.IsAny<byte[]>(), It.IsAny<byte[]>())).Returns(plainTextSecret);
 
             // Act
             var result = _ticketChecker.CheckTicket(scannedTicket, actualTicket);
@@ -229,9 +176,15 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
         public void CheckTicket_ProvidedSecretMatchesDecryptCustomerIdentifierThrowsCryptographicException_ReturnsResultOwnsTicketNameEmpty()
         {
             // Arrange
-            var secret = new byte[16] { 203, 92, 1, 93, 84, 38, 27, 94, 190, 10, 199, 232, 28, 2, 34, 83 };
-            var customerIdentifier = new byte[16] { 33, 93, 23, 252, 24, 38, 43, 94, 224, 10, 12, 232, 28, 211, 64, 99 };
             var plainTextSecret = "f09aIm3-hH9379c";
+            byte[] hashedSecret;
+            using (var hasher = Sha3.Sha3224())
+            {
+                hashedSecret = hasher.ComputeHash(plainTextSecret);
+            }
+
+            var customerIdentifier = new byte[16] { 33, 93, 23, 252, 24, 38, 43, 94, 224, 10, 12, 232, 28, 211, 64, 99 };
+
             var scannedTicket = new DigitalTicket
             {
                 Seat = new Seat { Number = 1, Letter = 'A' },
@@ -241,11 +194,10 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
             var actualTicket = new Ticket
             {
                 Seat = new Seat { Number = 1, Letter = 'A' },
-                Secret = secret,
+                Secret = hashedSecret,
                 CustomerIdentifier = customerIdentifier
             };
 
-            _cbc.Setup(callTo => callTo.Decrypt(secret, It.IsAny<byte[]>(), It.IsAny<byte[]>())).Returns(plainTextSecret);
             _cbc.Setup(callTo => callTo.Decrypt(customerIdentifier, It.IsAny<byte[]>(), It.IsAny<byte[]>())).Throws<CryptographicException>();
 
             // Act
@@ -263,9 +215,15 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
         public void CheckTicket_ProvidedSecretMatchesDecryptCustomerIdentifierThrowsArgumentException_LogsWarning()
         {
             // Arrange
-            var secret = new byte[16] { 203, 92, 1, 93, 84, 38, 27, 94, 190, 10, 199, 232, 28, 2, 34, 83 };
-            var customerIdentifier = new byte[16] { 33, 93, 23, 252, 24, 38, 43, 94, 224, 10, 12, 232, 28, 211, 64, 99 };
             var plainTextSecret = "f09aIm3-hH9379c";
+            byte[] hashedSecret;
+            using (var hasher = Sha3.Sha3224())
+            {
+                hashedSecret = hasher.ComputeHash(plainTextSecret);
+            }
+
+            var customerIdentifier = new byte[16] { 33, 93, 23, 252, 24, 38, 43, 94, 224, 10, 12, 232, 28, 211, 64, 99 };
+
             var scannedTicket = new DigitalTicket
             {
                 Seat = new Seat { Number = 1, Letter = 'A' },
@@ -275,11 +233,10 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
             var actualTicket = new Ticket
             {
                 Seat = new Seat { Number = 1, Letter = 'A' },
-                Secret = secret,
+                Secret = hashedSecret,
                 CustomerIdentifier = customerIdentifier
             };
 
-            _cbc.Setup(callTo => callTo.Decrypt(secret, It.IsAny<byte[]>(), It.IsAny<byte[]>())).Returns(plainTextSecret);
             _cbc.Setup(callTo => callTo.Decrypt(customerIdentifier, It.IsAny<byte[]>(), It.IsAny<byte[]>())).Throws<ArgumentException>();
 
             // Act
@@ -293,9 +250,15 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
         public void CheckTicket_ProvidedSecretMatchesDecryptCustomerIdentifierThrowsArgumentException_ReturnsNull()
         {
             // Arrange
-            var secret = new byte[16] { 203, 92, 1, 93, 84, 38, 27, 94, 190, 10, 199, 232, 28, 2, 34, 83 };
-            var customerIdentifier = new byte[16] { 33, 93, 23, 252, 24, 38, 43, 94, 224, 10, 12, 232, 28, 211, 64, 99 };
             var plainTextSecret = "f09aIm3-hH9379c";
+            byte[] hashedSecret;
+            using (var hasher = Sha3.Sha3224())
+            {
+                hashedSecret = hasher.ComputeHash(plainTextSecret);
+            }
+
+            var customerIdentifier = new byte[16] { 33, 93, 23, 252, 24, 38, 43, 94, 224, 10, 12, 232, 28, 211, 64, 99 };
+
             var scannedTicket = new DigitalTicket
             {
                 Seat = new Seat { Number = 1, Letter = 'A' },
@@ -305,11 +268,10 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
             var actualTicket = new Ticket
             {
                 Seat = new Seat { Number = 1, Letter = 'A' },
-                Secret = secret,
+                Secret = hashedSecret,
                 CustomerIdentifier = customerIdentifier
             };
 
-            _cbc.Setup(callTo => callTo.Decrypt(secret, It.IsAny<byte[]>(), It.IsAny<byte[]>())).Returns(plainTextSecret);
             _cbc.Setup(callTo => callTo.Decrypt(customerIdentifier, It.IsAny<byte[]>(), It.IsAny<byte[]>())).Throws<ArgumentException>();
 
             // Act
@@ -323,10 +285,16 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
         public void CheckTicket_ProvidedSecretMatchesCustomerIdentifierDecrypted_ReturnsResultOwnsTicketNameMatchesDecryptedValue()
         {
             // Arrange
-            var secret = new byte[16] { 203, 92, 1, 93, 84, 38, 27, 94, 190, 10, 199, 232, 28, 2, 34, 83 };
-            var customerIdentifier = new byte[16] { 33, 93, 23, 252, 24, 38, 43, 94, 224, 10, 12, 232, 28, 211, 64, 99 };
             var plainTextSecret = "f09aIm3-hH9379c";
+            byte[] hashedSecret;
+            using (var hasher = Sha3.Sha3224())
+            {
+                hashedSecret = hasher.ComputeHash(plainTextSecret);
+            }
+
+            var customerIdentifier = new byte[16] { 33, 93, 23, 252, 24, 38, 43, 94, 224, 10, 12, 232, 28, 211, 64, 99 };
             var name = "Benjamin Swift";
+
             var scannedTicket = new DigitalTicket
             {
                 Seat = new Seat { Number = 1, Letter = 'A' },
@@ -336,11 +304,10 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
             var actualTicket = new Ticket
             {
                 Seat = new Seat { Number = 1, Letter = 'A' },
-                Secret = secret,
+                Secret = hashedSecret,
                 CustomerIdentifier = customerIdentifier
             };
 
-            _cbc.Setup(callTo => callTo.Decrypt(secret, It.IsAny<byte[]>(), It.IsAny<byte[]>())).Returns(plainTextSecret);
             _cbc.Setup(callTo => callTo.Decrypt(customerIdentifier, It.IsAny<byte[]>(), It.IsAny<byte[]>())).Returns(name);
 
             // Act

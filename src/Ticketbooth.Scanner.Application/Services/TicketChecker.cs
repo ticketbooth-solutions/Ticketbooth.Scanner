@@ -1,6 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
+using SHA3.Net;
 using SmartContract.Essentials.Ciphering;
+using SmartContract.Essentials.Hashing;
 using System;
+using System.Linq;
 using System.Security.Cryptography;
 using Ticketbooth.Scanner.Application.Messaging.Data;
 using Ticketbooth.Scanner.Domain.Data.Dtos;
@@ -31,16 +34,11 @@ namespace Ticketbooth.Scanner.Application.Services
                 throw new ArgumentException(nameof(actualTicket), "Seats do not match");
             }
 
-            string plainTextSecret;
+            byte[] scannedSecretHash;
             try
             {
-                using var cbc = _cipherFactory.CreateCbcProvider();
-                plainTextSecret = cbc.Decrypt(actualTicket.Secret, scannedTicket.SecretKey, scannedTicket.SecretIV);
-            }
-            catch (CryptographicException e)
-            {
-                _logger.LogDebug(e.Message);
-                return new TicketScanResult(false, string.Empty);
+                using var hasher = Sha3.Sha3224();
+                scannedSecretHash = hasher.ComputeHash(scannedTicket.Secret);
             }
             catch (ArgumentException e)
             {
@@ -48,7 +46,7 @@ namespace Ticketbooth.Scanner.Application.Services
                 return null;
             }
 
-            if (plainTextSecret is null || !plainTextSecret.Equals(scannedTicket.Secret))
+            if (!actualTicket.Secret.SequenceEqual(scannedSecretHash))
             {
                 return new TicketScanResult(false, string.Empty);
             }

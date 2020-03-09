@@ -91,8 +91,6 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 {
                     Seat = new Seat { Number = 2, Letter = 'D' },
                     Secret = "plaintext",
-                    SecretKey = new byte[32],
-                    SecretIV = new byte[16],
                     NameKey = new byte[32],
                     NameIV = new byte[16]
                 }
@@ -122,8 +120,6 @@ namespace Ticketbooth.Scanner.Application.Tests.Services
                 {
                     Seat = new Seat { Number = i + 1, Letter = 'D' },
                     Secret = "plaintext",
-                    SecretKey = new byte[32],
-                    SecretIV = new byte[16],
                     NameKey = new byte[32],
                     NameIV = new byte[16]
                 };
